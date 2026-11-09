@@ -23,7 +23,12 @@ You are a research assistant. Given a user query for a research report, you gene
 """
 
 #Agent
-research_assistant = Agent(name="Research Assistant", instructions=instructions_followup_agent, model=MODEL_NAME, output_type=followups)
+research_assistant = Agent(
+    name="Research Assistant",
+    instructions=instructions_research_assistant,
+    model=MODEL_NAME,
+    output_type=followups,
+)
 
 
 
@@ -40,7 +45,8 @@ class planner_results(BaseModel):
 # Instruction
 instructions_planner_agent = f"""
 You are an assistant who writes search terms for websearch.
-Your Task: Given a query, you generate {NUM_SEARCH_TERMS} search terms to best answer the query. 
+Your Task: Given a query and any follow-up answers, generate {NUM_SEARCH_TERMS} search terms to best answer the query.
+Use the follow-up answers to refine the searches when they are provided.
 """
 
 # Agent

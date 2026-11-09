@@ -13,18 +13,21 @@ import asyncio
 
 class research_manager:
 
-    async def run(self, query: str):
+    async def run(
+        self,
+        query: str,
+        followup_questions: str = "",
+        followup_answer: str = "",
+    ):
         trace_id = gen_trace_id()
         with trace("Research Manager Workflow", trace_id=trace_id):
             
             yield f"Starting research...; Trace: https://platform.openai.com/traces/trace?trace_id={trace_id}"
-            
-            yield f"Preparing follow-up questions"
-            followup_message = await self.generate_followup_questions(query)
-            followup_answer = yield followup_message
-            
-            yield f"Recieved answers to follow-up questions. Performing web searches"
-            search_results = await self.run_searches(query, followup_message, followup_answer)
+
+            yield "Performing web searches..."
+            search_results = await self.run_searches(
+                query, followup_questions, followup_answer
+            )
             
             yield f"Performed {len(search_results)} searches."
             yield "Writing report..."
@@ -47,11 +50,19 @@ class research_manager:
 
         return followup_message
     
-    async def run_searches(self, query: str, follow_question: str, follow_answer: str):
+    async def run_searches(
+        self, query: str, followup_questions: str, followup_answer: str
+    ):
         """ Plan the list of searches, and perform the searches """
         # Create search terms 
         print("Planning searches...")
-        result = await Runner.run(planner_agent, f"Query: {query}")
+        planner_input = f"Query: {query}"
+        if followup_questions and followup_answer:
+            planner_input += (
+                f"\n\nFollow-up questions:\n{followup_questions}"
+                f"\nUser answers:\n{followup_answer}"
+            )
+        result = await Runner.run(planner_agent, planner_input)
         searches = result.final_output.search_terms
         
         # Perform searches
